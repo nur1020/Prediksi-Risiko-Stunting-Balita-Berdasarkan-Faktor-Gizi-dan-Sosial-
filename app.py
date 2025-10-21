@@ -66,6 +66,22 @@ selected_features = [
     'Garis Kemiskinan'
 ]
 
+# Mapping nama fitur agar tampil lebih pendek di UI
+feature_labels = {
+    'Jumlah Balita Pendek (TB/U)': 'Balita Pendek',
+    'Jumlah Balita Gizi Buruk (BB/TB : < -3 SD)': 'Gizi Buruk',
+    'Jumlah Balita Gizi Kurang (BB/TB : < -2 sd -3 SD)': 'Gizi Kurang',
+    'Persentase Penduduk Miskin': 'Penduduk Miskin (%)',
+    'wasting': 'Wasting (%)',
+    'Rumah Tangga yang Memiliki Akses Terhadap Sanitasi Layak': 'Sanitasi Layak (%)',
+    'Bayi Baru Lahir (Jumlah Mendapat IMD)': 'IMD',
+    'Jumlah Balita Yang Diukur Tinggi Badan': 'Diukur TB',
+    'Jumlah Balita Yang Ditimbang': 'Ditimbang BB',
+    'Bayi Usia <6 Bulan (Jumlah Diberi ASI Eksklusif)': 'ASI Eksklusif',
+    'Perempuan': 'Perempuan (%)',
+    'Garis Kemiskinan': 'Garis Kemiskinan'
+}
+
 X = df[selected_features]
 y = df['stunting']
 
@@ -111,8 +127,9 @@ for i in range(1, 10 + 1):
     for feature in selected_features:
         median_val = float(np.median(df[feature].dropna()))
         fmt = "%.2f" if feature in decimal_features else "%.0f"
+        label_nama = feature_labels.get(feature, feature)
         wilayah_data[feature] = st.sidebar.number_input(
-            label=f"{feature} ({wilayah})",
+            label=f"{label_nama} ({wilayah})",
             value=median_val,
             format=fmt,
             key=f"{feature}_{i}"
@@ -188,13 +205,16 @@ scaled_values = scaler_minmax.fit_transform(numeric_input)
 scaled_df = pd.DataFrame(scaled_values, columns=selected_features)
 scaled_df["Kabupaten_Kota"] = input_df["Kabupaten_Kota"]
 
+# Ganti nama kolom dengan label pendek untuk tampilan heatmap
+scaled_df.rename(columns=feature_labels, inplace=True)
+
 n_cols = 2
 n_rows = int(np.ceil(len(scaled_df) / n_cols))
 fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, n_rows * 3))
 axes = axes.flatten()
 
 for i, (idx, row) in enumerate(scaled_df.iterrows()):
-    data = pd.DataFrame(row[selected_features].astype(float)).T
+    data = pd.DataFrame(row.drop("Kabupaten_Kota")).T
     sns.heatmap(
         data,
         annot=True,

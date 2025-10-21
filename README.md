@@ -2,6 +2,11 @@
 
 Aplikasi ini digunakan untuk memprediksi risiko stunting pada balita di suatu wilayah, dengan menampilkan apakah wilayah tersebut tergolong risiko tinggi atau risiko rendah terhadap stunting.
 
+# Link Aplikasi Streamlit
+Untuk memudahkan visualisasi hasil penelitian ini, telah dibuat aplikasi interaktif berbasis Streamlit yang dapat diakses melalui tautan berikut:
+🔗 https://risiko-stunting.streamlit.app/
+Aplikasi ini memungkinkan pengguna untuk melakukan simulasi prediksi risiko stunting berdasarkan faktor gizi dan sosial di setiap kabupaten/kota.
+
 ## Tim Pengembang
 Kelompok 2  
 - Nirmala (E1E123012)  

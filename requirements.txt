@@ -1,12 +1,13 @@
-streamlit==1.46.0
-pandas==2.2.2
-numpy==2.0.2
-seaborn==0.13.2
-matplotlib==3.10.0
-scikit-learn==1.6.1
-pydeck==0.9.1
-scipy==1.16.2
-joblib==1.5.2
-openpyxl==3.1.5
+streamlit
+pandas
+numpy
+seaborn
+matplotlib
+scikit-learn
+pydeck
+scipy
+joblib
+openpyxl
+
 
 

@@ -3,12 +3,12 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import joblib  
+import joblib
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.metrics import accuracy_score
 import pydeck as pdk
 
-# Konfigurasi Halaman 
+# Konfigurasi Halaman
 st.set_page_config(page_title="Prediksi Risiko Stunting", layout="wide")
 st.title("Prediksi Risiko Stunting di Sulawesi Tenggara")
 st.markdown("""
@@ -16,7 +16,7 @@ Aplikasi ini memprediksi **tingkat risiko stunting** berdasarkan faktor gizi dan
 menggunakan **model K-Nearest Neighbors (KNN)**.
 """)
 
-# Load Dataset
+# LOAD DATA
 @st.cache_data
 def load_data():
     df = pd.read_csv("data_cleaned.csv")
@@ -25,7 +25,7 @@ def load_data():
 
 df = load_data()
 
-# Data Koordinat Kabupaten/Kota 
+# Data Koordinat Kabupaten/Kota
 @st.cache_data
 def load_kabupaten_coords():
     data = {
@@ -50,7 +50,7 @@ def load_kabupaten_coords():
 
 df_coords = load_kabupaten_coords()
 
-# Pilih fitur & target 
+# FITUR DAN TARGET
 selected_features = [
     'Jumlah Balita Pendek (TB/U)',
     'Jumlah Balita Gizi Buruk (BB/TB : < -3 SD)',
@@ -66,7 +66,7 @@ selected_features = [
     'Garis Kemiskinan'
 ]
 
-# Mapping nama fitur agar tampil lebih pendek di UI
+# Label lebih pendek
 feature_labels = {
     'Jumlah Balita Pendek (TB/U)': 'Balita Pendek',
     'Jumlah Balita Gizi Buruk (BB/TB : < -3 SD)': 'Gizi Buruk',
@@ -89,7 +89,7 @@ y = df['stunting']
 threshold = y.median()
 y_class = np.where(y > threshold, "Tinggi", "Rendah")
 
-# Load Scaler & Model dari File 
+# LOAD MODEL & SCALER
 try:
     scaler = joblib.load("scaler.pkl")
     model = joblib.load("model.pkl")
@@ -97,7 +97,7 @@ except Exception as e:
     st.error(f"Gagal memuat model atau scaler: {e}")
     st.stop()
 
-# Evaluasi Akurasi Cepat 
+# Evaluasi Akurasi
 try:
     X_scaled = scaler.transform(X)
     y_pred = model.predict(X_scaled)
@@ -105,7 +105,7 @@ try:
 except Exception:
     acc = np.nan
 
-# Input User 
+# INPUT USER
 st.sidebar.header("Masukkan Data Faktor Sosial & Gizi (10 Wilayah)")
 
 decimal_features = [
@@ -117,7 +117,7 @@ decimal_features = [
 ]
 
 input_list = []
-for i in range(1, 10 + 1):
+for i in range(1, 11):
     st.sidebar.subheader(f"Wilayah {i}")
     wilayah = st.sidebar.selectbox(
         f"Nama Kabupaten/Kota {i}", df_coords["Kabupaten_Kota"], key=f"wilayah_{i}"
@@ -138,7 +138,7 @@ for i in range(1, 10 + 1):
 
 input_df = pd.DataFrame(input_list)
 
-# Standarisasi & Prediksi
+# PREDIKSI
 try:
     input_scaled = scaler.transform(input_df[selected_features])
     predictions = model.predict(input_scaled)
@@ -155,16 +155,15 @@ except Exception as e:
     st.error(f"Gagal melakukan prediksi: {e}")
     st.stop()
 
-# Gabung dengan koordinat untuk peta 
+# PETA INTERAKTIF
+st.markdown("---")
+st.subheader("Peta Risiko Stunting di Sulawesi Tenggara")
+
 df_map = pd.merge(df_coords, input_df, on="Kabupaten_Kota", how="left")
 df_map["color"] = df_map["Prediksi Risiko"].map(
     {"Tinggi": [255, 0, 0], "Rendah": [0, 200, 0]}
 )
 df_map["color"] = df_map["color"].apply(lambda x: x if isinstance(x, list) else [200, 200, 200])
-
-# Peta Interaktif 
-st.markdown("---")
-st.subheader("Peta Risiko Stunting di Sulawesi Tenggara")
 
 view_state = pdk.ViewState(
     latitude=df_map["Latitude"].mean(),
@@ -184,7 +183,7 @@ layer = pdk.Layer(
 tooltip = {"text": "{Kabupaten_Kota}\nRisiko: {Prediksi Risiko}"}
 st.pydeck_chart(pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip=tooltip))
 
-#  Bar Chart 
+# BAR CHART
 st.markdown("---")
 st.subheader("Perbandingan Risiko Stunting Wilayah Input")
 
@@ -195,7 +194,7 @@ ax.set_xlabel("")
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
 st.pyplot(fig)
 
-# Heatmap Faktor
+# HEATMAP FAKTOR
 st.markdown("---")
 st.subheader("Heatmap Faktor Sosial & Gizi (Input Pengguna)")
 
@@ -204,8 +203,6 @@ scaler_minmax = MinMaxScaler()
 scaled_values = scaler_minmax.fit_transform(numeric_input)
 scaled_df = pd.DataFrame(scaled_values, columns=selected_features)
 scaled_df["Kabupaten_Kota"] = input_df["Kabupaten_Kota"]
-
-# Ganti nama kolom dengan label pendek untuk tampilan heatmap
 scaled_df.rename(columns=feature_labels, inplace=True)
 
 n_cols = 2
@@ -214,7 +211,8 @@ fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, n_rows * 3))
 axes = axes.flatten()
 
 for i, (idx, row) in enumerate(scaled_df.iterrows()):
-    data = pd.DataFrame(row.drop("Kabupaten_Kota")).T
+    data = pd.DataFrame(row.drop("Kabupaten_Kota")).T.astype(float)
+
     sns.heatmap(
         data,
         annot=True,

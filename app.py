@@ -66,7 +66,6 @@ selected_features = [
     'Garis Kemiskinan'
 ]
 
-# Label lebih pendek
 feature_labels = {
     'Jumlah Balita Pendek (TB/U)': 'Balita Pendek',
     'Jumlah Balita Gizi Buruk (BB/TB : < -3 SD)': 'Gizi Buruk',
@@ -117,7 +116,7 @@ decimal_features = [
 ]
 
 input_list = []
-for i in range(1, 11):
+for i in range(1, 10 + 1):
     st.sidebar.subheader(f"Wilayah {i}")
     wilayah = st.sidebar.selectbox(
         f"Nama Kabupaten/Kota {i}", df_coords["Kabupaten_Kota"], key=f"wilayah_{i}"
@@ -207,7 +206,8 @@ scaled_df.rename(columns=feature_labels, inplace=True)
 
 n_cols = 2
 n_rows = int(np.ceil(len(scaled_df) / n_cols))
-fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, n_rows * 3))
+
+fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, n_rows * 4))
 axes = axes.flatten()
 
 for i, (idx, row) in enumerate(scaled_df.iterrows()):
@@ -218,18 +218,20 @@ for i, (idx, row) in enumerate(scaled_df.iterrows()):
         annot=True,
         cmap="coolwarm",
         cbar=False,
-        linewidths=0.5,
+        linewidths=0.7,
         vmin=0, vmax=1,
-        ax=axes[i]
+        ax=axes[i],
+        annot_kws={"size": 8}
     )
-    axes[i].set_title(f"{row['Kabupaten_Kota']}", fontsize=11)
+    axes[i].set_title(f"{row['Kabupaten_Kota']}", fontsize=12, pad=10)
     axes[i].set_yticklabels([])
-    axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=45, ha="right")
+    axes[i].set_xticklabels(axes[i].get_xticklabels(), rotation=40, ha="right")
 
 for j in range(i + 1, len(axes)):
     fig.delaxes(axes[j])
 
-plt.tight_layout()
+plt.subplots_adjust(wspace=0.4, hspace=0.6)
+
 st.pyplot(fig)
 
 st.markdown("""
